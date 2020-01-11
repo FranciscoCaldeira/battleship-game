@@ -17,21 +17,37 @@
                 <div class="row">
                     <div class="col-sm-4 col-sm-offset-4 text-center">
                         <div class="alert alert-danger">
-                            <p>Not connected to server.</p>
+                            <p>Servidor desligado/ não tem ligação com o servidor</p>
                         </div>
                     </div>
                 </div>
             </div>
-
+            
             <!-- Waiting room -->
             <div id="waiting-room" style="display:none;">
                 <div class="row">
                     <div class="col-sm-4 col-sm-offset-4 text-center">
                         <div class="panel panel-primary">
-                            <div class="panel-heading">Waiting Room</div>
+                            <div class="panel-heading">Lobby de espera</div>
                             <div class="panel-body">
-                                <p>You are connected to the server.</p>
-                                <p>Waiting for another player...</p>
+                                <p>Já estas ligado ao servidor.</p>
+                                <p>Esperando por outros jogadores...</p>
+                                <p>Grava o teu nick para os ranks...</p>
+                                    <form id="nick" @submit="checkForm" action="/" method="post">
+                                        <p v-if="errors.length">
+                                            <b>Por favor, corrija o(s) seguinte(s) erro(s):</b>
+                                            <ul>
+                                                <li v-for="error in errors">{{ error }}</li>
+                                            </ul>
+                                        </p>
+                                        <p>
+                                            <label for="name">Nome</label>
+                                            <input id="name" v-model="name" type="text" name="name" >
+                                        </p>
+                                        <p>
+                                            <input type="submit" value="Gravar nickname">
+                                        </p>
+                                    </form>
                             </div>
                         </div>
                     </div>
@@ -43,7 +59,7 @@
                 <div class="row">
                     <div class="col-md-12">
                         <div class="panel panel-primary">
-                            <div class="panel-heading">Battleship Game #<span id="game-number"></span></div>
+                            <div class="panel-heading">Batalha naval #<span id="game-number"></span></div>
                             <div class="panel-body">
 
                                 <!-- Player grids -->
@@ -87,34 +103,58 @@
                     </div>
                 </div>
             </div>
-
+            <audio id="sound_notification" src="sound/success-notification-alert.wav"></audio>
         </div>
     </div>
 </div>
-
+<!-- <%- include('footer')%>; -->
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.4/js/bootstrap.min.js"></script>
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.5/socket.io.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/vue/1.0.18/vue.min.js" type="text/javascript"></script> <!-- para o vue-->
 </body>
 
 <script src="/socket.io/socket.io.js"></script>
+
+
 <script>
     /***********************************************************CLIENT**************************************************************/
     var socket = io(); //documentação do socketio diz pa por dps do body mas tmb dentro do function//neste caso só fora pq landa erro
-  $(function() {
-    
+  
+    // function login(){
+    //   socket.emit('set_user',$("#nick_name").val());
+    // }
+
+$(function() {
+        //VUE post nick
+        const app = new Vue({
+            el: '#nick',
+            data: {
+                errors: [],
+                name: null,
+            },
+            methods:{
+                checkForm: function (e) {
+                    if (this.name) {
+                        return true;
+                    }
+
+                    this.errors = [];
+
+                    if (!this.name) {
+                        this.errors.push('O nome é obrigatório.');
+                    }
+                    e.preventDefault();
+
+                    socket.emit('new_user_post', this.name);
+                }
+            }
+        });
 
     /**
      * Successfully connected to server event
      */
     socket.on('connect', function() {
-        console.log('Connected to server.');
-
-       //socket.on('join', function() {
-       //  socket.emit('join','Enter login');
-       //});
-
-
         $('#disconnected').hide();
         $('#waiting-room').show(); 
     });
@@ -123,7 +163,6 @@
      * Disconnected from server event
      */
     socket.on('disconnect', function() {
-        console.log('Disconnected from server.');
         $('#waiting-room').hide();
         $('#game').hide();
         $('#disconnected').show();
@@ -155,6 +194,9 @@
     socket.on('chat', function(msg) {
         $('#messages').append('<li><strong>' + msg.name + ':</strong> ' + msg.message + '</li>');
         $('#messages-list').scrollTop($('#messages-list')[0].scrollHeight);
+        
+        PlaySound("sound_notification");
+
     });
 
     /**
@@ -163,6 +205,9 @@
     socket.on('notification', function(msg) {
         $('#messages').append('<li>' + msg.message + '</li>');
         $('#messages-list').scrollTop($('#messages-list')[0].scrollHeight);
+
+        PlaySound("sound_notification");
+        
     });
 
     /**
@@ -189,15 +234,15 @@
         return false;
     });
 
-    });
+});
 
     /**
      * Send leave game request
      * @param {type} e Event
      */
     function sendLeaveRequest(e) {
-    e.preventDefault();
-    socket.emit('leave');
+        e.preventDefault();
+        socket.emit('leave');
     }
 
     /**
@@ -205,7 +250,7 @@
      * @param {type} square
      */
     function sendShot(square) {
-    socket.emit('shot', square);
+        socket.emit('shot', square);
     }
     /***********************************************************END CLIENT**************************************************************/
 
@@ -217,17 +262,17 @@ var GameStatus = {
 }
 
 var Game = (function() {
-  var canvas = [], context = [], grid = [],
-      gridHeight = 361, gridWidth = 361, gridBorder = 1,
-      gridRows = 10, gridCols = 10, markPadding = 10, shipPadding = 3,
-      squareHeight = (gridHeight - gridBorder * gridRows - gridBorder) / gridRows,
-      squareWidth = (gridWidth - gridBorder * gridCols - gridBorder) / gridCols,
-      turn = false, gameStatus, squareHover = { x: -1, y: -1 };
+    var canvas = [], context = [], grid = [],
+    gridHeight = 361, gridWidth = 361, gridBorder = 1,
+    gridRows = 10, gridCols = 10, markPadding = 10, shipPadding = 3,
+    squareHeight = (gridHeight - gridBorder * gridRows - gridBorder) / gridRows,
+    squareWidth = (gridWidth - gridBorder * gridCols - gridBorder) / gridCols,
+    turn = false, gameStatus, squareHover = { x: -1, y: -1 };
 
-  canvas[0] = document.getElementById('canvas-grid1');    // This player
-  canvas[1] = document.getElementById('canvas-grid2');    // Opponent
-  context[0] = canvas[0].getContext('2d');
-  context[1] = canvas[1].getContext('2d');
+    canvas[0] = document.getElementById('canvas-grid1');    // This player
+    canvas[1] = document.getElementById('canvas-grid2');    // Opponent
+    context[0] = canvas[0].getContext('2d');
+    context[1] = canvas[1].getContext('2d');
 
   /**
    * Highlight opponent square on hover
@@ -330,9 +375,9 @@ var Game = (function() {
       turn = turnState;
 
       if(turn) {
-        $('#turn-status').removeClass('alert-opponent-turn').addClass('alert-your-turn').html('It\'s your turn!');
+        $('#turn-status').removeClass('alert-opponent-turn').addClass('alert-your-turn').html('É a tua vez');
       } else {
-        $('#turn-status').removeClass('alert-your-turn').addClass('alert-opponent-turn').html('Waiting for opponent.');
+        $('#turn-status').removeClass('alert-your-turn').addClass('alert-opponent-turn').html('À espera do oponente.');
       }
     }
   };
@@ -460,6 +505,13 @@ var Game = (function() {
   };
 })();
     /***********************************************************END GAME**************************************************************/
+
+    /**********************************************************EXTRA*****************************************************************/socket
+
+    function PlaySound(soundObj) {
+        var sound = document.getElementById(soundObj);
+        sound.play();
+    }
 
 </script>
 

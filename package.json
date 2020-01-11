@@ -1,7 +1,7 @@
 {
-  "name": "NodeBattleship",
+  "name": "P2BattleshipACR",
   "version": "0.0.1",
-  "description": "Multiplayer Battleship with NodeJS and Socket.io",
+  "description": "Jogo de Battleship com socket, vue, ejs, jquery",
   "author": {
     "name": "Christian Nilsson"
   },
@@ -9,6 +9,7 @@
     "ejs": "^3.0.1",
     "express": "4.12.3",
     "html-entities": "1.1.2",
+    "mysql": "^2.17.1",
     "socket.io": "1.3.5"
   }
 }
