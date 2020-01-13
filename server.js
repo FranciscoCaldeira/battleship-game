@@ -11,7 +11,32 @@ var entities = new Entities();
 //embebd js
 var ejs      = require('ejs');
 app.set('view engine','ejs');
-app.set('views', express.static(__dirname + '/views'));// diretório das views
+app.set('views',__dirname+'/views');
+
+//load da página inicial
+app.get('/',function(req,res){
+  res.render('index', {
+    canvas_msg_error: 'Browser does not support canvas.'
+  });
+});
+
+//post dos nicknames
+app.post('/', function(req, res) {
+  // var user_id = req.body.id;
+  // var token = req.body.token;
+  // var geo = req.body.geo;
+
+  // res.send(user_id + ' ' + token + ' ' + geo);
+});
+
+//extra rank
+app.get('/rank',function(req,res){
+  con.query("SELECT `socket_id`, SUM(`score`) as score_sum   FROM rank   GROUP BY `socket_id`   ORDER BY score_sum DESC", function (err, result, fields) {
+    if (err) throw err;
+    console.log(result);
+    res.render('rank', { values: result });
+  });
+});
 
 //bd
 const mysql = require('mysql');
@@ -90,13 +115,13 @@ io.on('connection', function(socket) {
     if(users[socket.id].inGame !== null && msg) { 
       // Send message to opponent
       socket.broadcast.to('game' + users[socket.id].inGame.id).emit('chat', {
-        name: 'Opponent', //aqui é meter o name caso ele tenha
+        name: 'Oponente', //aqui é meter o name caso ele tenha
         message: entities.encode(msg),
       });
 
       // Send message to self
       io.to(socket.id).emit('chat', {
-        name: 'Me',
+        name: 'Eu',
         message: entities.encode(msg),
       });
     }
@@ -185,7 +210,6 @@ function joinWaitingPlayers() {
  */
 function leaveGame(socket) {
   if(users[socket.id].inGame !== null) {
-    console.log((new Date().toISOString()) + ' ID ' + socket.id + ' left game ID ' + users[socket.id].inGame.id);
 
     // Notifty opponent
     socket.broadcast.to('game' + users[socket.id].inGame.id).emit('notification', {
@@ -215,8 +239,25 @@ function checkGameOver(game) {
   if(game.gameStatus === GameStatus.gameOver) {
     io.to(game.getWinnerId()).emit('gameover', true);
 
-    //add socket ID ao rank se for !=null
+    var winner = {socket_id: game.getWinnerId(),
+                  score: 1}
+    con.query(
+      'INSERT INTO rank SET ?', winner, (err, res) => {
+      if (err) throw err
+    })
+
     io.to(game.getLoserId()).emit('gameover', false);
+
+    var loser = {socket_id: game.getLoserId(),
+                 score: -1}
+    con.query(
+      'INSERT INTO rank SET ?', loser, (err, res) => {
+      if (err) throw err
+    })
+
+    console.log( ' ID ' + game.getWinnerId() + ' ganhou ');
+    console.log( ' ID ' + game.getLoserId() + ' perdeu ');
+
   }
 }
 

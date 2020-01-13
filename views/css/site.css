@@ -106,3 +106,12 @@ h3 {
     background-color: #f2dede;
     border-color: #ebccd1;
 }
+
+footer {
+    text-align: center;
+    color: white;
+    background-color: black;
+    position: absolute;
+    width: 100%;
+    bottom: 0;
+}

@@ -4,7 +4,7 @@
     <title>NodeBattleship</title>
     <meta charset="UTF-8">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.4/css/bootstrap.min.css">
-    <link rel="stylesheet" href="/css/site.css">
+    <link rel="stylesheet" href="css/site.css">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
@@ -13,15 +13,7 @@
         <div class="col-md-12">
 
             <!-- Disconnected from server -->
-            <div id="disconnected">
-                <div class="row">
-                    <div class="col-sm-4 col-sm-offset-4 text-center">
-                        <div class="alert alert-danger">
-                            <p>Servidor desligado/ não tem ligação com o servidor</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <%- include('disconnected')%>
             
             <!-- Waiting room -->
             <div id="waiting-room" style="display:none;">
@@ -65,12 +57,12 @@
                                 <!-- Player grids -->
                                 <div class="row">
                                     <div class="col-md-6 player-grid text-center">
-                                        <h3>You</h3>
-                                        <canvas id="canvas-grid1" width="361" height="361">Browser does not support canvas.</canvas>
+                                        <h3>Teu jogo</h3>
+                                        <canvas id="canvas-grid1" width="361" height="361"><%= canvas_msg_error %></canvas>
                                     </div>
                                     <div class="col-md-6 player-grid text-center">
-                                        <h3>Opponent</h3>
-                                        <canvas id="canvas-grid2" width="361" height="361">Browser does not support canvas.</canvas>
+                                        <h3>Jogo do Oponente</h3>
+                                        <canvas id="canvas-grid2" width="361" height="361"><%= canvas_msg_error %></canvas>
                                     </div>
                                 </div>
                                 
@@ -92,7 +84,7 @@
                                         <div class="input-group">
                                         <input id="message" class="form-control" autocomplete="off" />
                                         <div class="input-group-btn">
-                                            <button class="btn btn-primary">Send Message</button>
+                                            <button class="btn btn-primary">Envia Menssagem</button>
                                         </div>
                                         </div>
                                     </form>
@@ -107,7 +99,7 @@
         </div>
     </div>
 </div>
-<!-- <%- include('footer')%>; -->
+<%- include('footer')%>  
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.4/js/bootstrap.min.js"></script>
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.5/socket.io.min.js"></script>
@@ -375,9 +367,9 @@ var Game = (function() {
       turn = turnState;
 
       if(turn) {
-        $('#turn-status').removeClass('alert-opponent-turn').addClass('alert-your-turn').html('É a tua vez');
+        $('#turn-status').removeClass('alert-opponent-turn').addClass('alert-your-turn').html('É a tua vez...');
       } else {
-        $('#turn-status').removeClass('alert-your-turn').addClass('alert-opponent-turn').html('À espera do oponente.');
+        $('#turn-status').removeClass('alert-your-turn').addClass('alert-opponent-turn').html('À espera do oponente...');
       }
     }
   };
@@ -392,10 +384,10 @@ var Game = (function() {
     
     if(isWinner) {
       $('#turn-status').removeClass('alert-opponent-turn').removeClass('alert-your-turn')
-              .addClass('alert-winner').html('You won! <a href="#" class="btn-leave-game">Play again</a>.');
+              .addClass('alert-winner').html('Você ganhou! <a href="#" class="btn-leave-game">Joga novamente</a>.');
     } else {
       $('#turn-status').removeClass('alert-opponent-turn').removeClass('alert-your-turn')
-              .addClass('alert-loser').html('You lost. <a href="#" class="btn-leave-game">Play again</a>.');
+              .addClass('alert-loser').html('Você perdeu. <a href="#" class="btn-leave-game"Joga novamente</a>.');
     }
     $('.btn-leave-game').click(sendLeaveRequest);
   }
