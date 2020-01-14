@@ -3,24 +3,30 @@
 <head>
     <title>NodeBattleship-Rank</title>
     <meta charset="UTF-8">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.4/css/bootstrap.min.css">
     <link rel="stylesheet" href="css/site.css">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
+<%- include('navbar')%>
 
-<table>
-    <tr>
-        <th>Nome</th>
-        <th>Score</th>
-    </tr>
-    <% for (var i = 0; i < values.length; i++) { %>
+<% if(values.length > 0){ %>
+    <p>Tenta bater o teu adeversário <a href="/">aqui</a>.</p>
+    <table class="table">
         <tr>
-            <td><%= values[i].socket_id %></td>
-            <td><%= values[i].score_sum %></td>
+            <th>Nome</th>
+            <th>Score</th>
         </tr>
-    <% } %>
-</table>
+        <% for (var i = 0; i < values.length; i++) { %>
+            <tr>
+                <td><%= values[i].socket_id %></td>
+                <td><%= values[i].score_sum %></td>
+            </tr>
+        <% } %>
+    </table>
+<% } else{ %>  
+    <p>Não temos registos de ranks.Podes jogar o jogo <a href="/">aqui</a>.</p>
+<% } %>
 
 <%- include('footer')%>  
 </body>
-

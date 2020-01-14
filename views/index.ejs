@@ -8,6 +8,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
+<%- include('navbar')%>  
 <div class="container">
     <div class="row vertical-center-row">
         <div class="col-md-12">
@@ -25,7 +26,7 @@
                                 <p>Já estas ligado ao servidor.</p>
                                 <p>Esperando por outros jogadores...</p>
                                 <p>Grava o teu nick para os ranks...</p>
-                                    <form id="nick" @submit="checkForm" action="/" method="post">
+                                    <form id="nick" @submit="checkForm" action="/">
                                         <p v-if="errors.length">
                                             <b>Por favor, corrija o(s) seguinte(s) erro(s):</b>
                                             <ul>
@@ -111,11 +112,7 @@
 
 <script>
     /***********************************************************CLIENT**************************************************************/
-    var socket = io(); //documentação do socketio diz pa por dps do body mas tmb dentro do function//neste caso só fora pq landa erro
-  
-    // function login(){
-    //   socket.emit('set_user',$("#nick_name").val());
-    // }
+    var socket = io();
 
 $(function() {
         //VUE post nick
@@ -128,7 +125,7 @@ $(function() {
             methods:{
                 checkForm: function (e) {
                     if (this.name) {
-                        return true;
+                      socket.emit('set_user', this.name);
                     }
 
                     this.errors = [];
@@ -136,9 +133,6 @@ $(function() {
                     if (!this.name) {
                         this.errors.push('O nome é obrigatório.');
                     }
-                    e.preventDefault();
-
-                    socket.emit('new_user_post', this.name);
                 }
             }
         });

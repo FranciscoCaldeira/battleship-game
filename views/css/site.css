@@ -107,11 +107,6 @@ h3 {
     border-color: #ebccd1;
 }
 
-footer {
-    text-align: center;
-    color: white;
-    background-color: black;
-    position: absolute;
-    width: 100%;
-    bottom: 0;
+svg {
+    width: 20px;
 }

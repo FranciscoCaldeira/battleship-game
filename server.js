@@ -2,7 +2,7 @@ var express = require('express');
 var app = express();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
-// var bodyParser = require('body-parser');
+//var bodyParser = require('body-parser');
 
 //url encode e decode
 var Entities = require('html-entities').AllHtmlEntities;
@@ -18,15 +18,6 @@ app.get('/',function(req,res){
   res.render('index', {
     canvas_msg_error: 'Browser does not support canvas.'
   });
-});
-
-//post dos nicknames
-app.post('/', function(req, res) {
-  // var user_id = req.body.id;
-  // var token = req.body.token;
-  // var geo = req.body.geo;
-
-  // res.send(user_id + ' ' + token + ' ' + geo);
 });
 
 //extra rank
@@ -49,14 +40,11 @@ const con = mysql.createConnection({
 //ligação à bd
 con.connect(function(err) {
     console.log("Ligação com uma DB! Usa os seguintes sql no MYSQL:");
-    //console.log("CREATE DATABASE battle");
-    //console.log("CREATE TABLE `user` (`id` int(11) NOT NULL,`socket_id` varchar(255) NOT NULL,`name` varchar(50) NOT NULL) ENGINE=InnoDB DEFAULT CHARSET=latin1;ALTER TABLE `user`ADD PRIMARY KEY (`id`),ADD UNIQUE KEY `socket_id` (`socket_id`), MODIFY `id` int(11) NOT NULL AUTO_INCREMENT,ADD `created_at` TIMESTAMP NOT NULL AFTER `name`;");
-
-    //criar aqui diretamente, mas faltaria dps referir que é esta db
-    //con.query("CREATE DATABASE battle", function (err, result) {
-    //  console.log("Database battle created");
-    //});
-
+    console.log("CREATE DATABASE battle");
+    console.log("CREATE TABLE `user` (`id` int(11) NOT NULL,`socket_id` varchar(255) NOT NULL,`name` varchar(50) NOT NULL) ENGINE=InnoDB DEFAULT CHARSET=latin1;ALTER TABLE `user`ADD PRIMARY KEY (`id`),ADD UNIQUE KEY `socket_id` (`socket_id`), MODIFY `id` int(11) NOT NULL AUTO_INCREMENT,ADD `created_at` TIMESTAMP NOT NULL AFTER `name`;");
+    console.log("CREATE TABLE `rank` (`id` int(11) NOT NULL,`socket_id` varchar(255) NOT NULL,`score` int(11) NOT NULL) ENGINE=InnoDB DEFAULT CHARSET=latin1;ALTER TABLE `rank` ADD PRIMARY KEY (`id`); ALTER TABLE `rank` MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;")
+    console.log("CREATE TABLE `game` (`id` int(11) NOT NULL,`game` int(11) NOT NULL,`socket_id_1` varchar(255) NOT NULL,`socket_id_2` varchar(255) NOT NULL,`created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP)});ALTER TABLE `game` ADD PRIMARY KEY (`id`);ALTER TABLE `game` MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;")
+    console.log("***********************************************************************************************")
 });
 
 var BattleshipGame = require('./app/game.js');
@@ -92,20 +80,19 @@ io.on('connection', function(socket) {
 
   // join waiting room until there are enough players to start a new game
   socket.join('waiting room'); //socketio rooms/channel são feitos com o join
-
     /**
     * Dá um nome ao socket.id, quando está esperando
     */
-//   socket.on('set_user', function(socket, name) {
-//     users[socket.id] = nome;
-//     console.log(nome);
-//     //console.log(users[socket.id]+' joined the chatroom'); 
-//     //console.log(users);
-//     //io.emit('update'," ### "+users[socket.id]+" joined the chatroom  ###");
-//   });
+    socket.on('set_user', function(data) {
+      var socket_id = socket.id;
+      var name = entities.encode(data);
 
-    socket.on('new_user_post', function(socket, nickname) {
-        console.log(users[socket.id]);
+      var sql = "UPDATE user SET name = '"+name+"' WHERE socket_id = '"+socket_id+"'";
+
+      con.query(sql, function (err, result) {
+        if (err) throw err;
+      });
+
     });
 
   /**
@@ -184,6 +171,16 @@ function joinWaitingPlayers() {
   if(players.length >= 2) {
     // 2 player waiting. Create new game!
     var game = new BattleshipGame(gameIdCounter++, players[0].id, players[1].id); //gamecounter é o nr do rooms player id vem o socket id
+    
+    var newGame = { game: game.id,
+                    socket_id_1: players[0].id,
+                    socket_id_2: players[1].id,
+                    created_at: new Date()};
+    con.query(
+      'INSERT INTO game SET ?', newGame, (err, res) => {
+      if (err) throw err
+      console.log(`New Game`);
+    });                
 
     // create new room for this game
     players[0].leave('waiting room');
